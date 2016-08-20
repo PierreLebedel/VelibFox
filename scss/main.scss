@@ -1,0 +1,153 @@
+@keyframes rotate {
+  from { transform: rotate(1deg); }
+  to   { transform: rotate(360deg); }
+}
+
+#main {
+    padding:5rem 0 0 0;
+    position:relative;
+    z-index:5;
+
+    #loader{
+    	position:absolute;
+    	top:0; left:0; right:0; bottom:0;
+    	background:transparentize(#a54d93, 0.5);
+    	height:100%;
+    	z-index:6;
+
+    	.icon{
+    		display:block;
+    		background: url(../images/loaders/light.png) no-repeat center center / 100% auto;
+			animation: 0.9s rotate infinite steps(30);
+			width: 2.8rem;
+			height: 2.8rem;
+			border: none;
+			display: block;
+			position:absolute;
+			top:50%;
+			left:50%;
+			margin:-2.4rem 0 0 -1.4rem;
+    	}
+    	.linfo{
+    		position:absolute;
+    		top:50%;
+    		left:0; right:0;
+    		margin-top:1.3rem;
+    		text-align:center;
+    		font-size:1.2rem;
+    		color:#fff;
+    	}
+    }
+
+    #mapdiv{
+    	height: calc(100vh - 5rem);
+    	position:relative;
+    	z-index:4;
+
+    	.olControlAttribution{
+    		bottom:3px !important;
+    	}
+    	.leaflet-control{
+    		display:none !important;
+    	}
+    }
+
+    #station{
+    	position:fixed;
+    	bottom:-14.5rem;
+    	height:14.5rem;
+    	background:#fff;
+    	width:100%;
+    	left:0; right:0;
+    	@include transition(all 0.2s);
+    	z-index:7;
+    	border-top:3px solid #a54d93;
+
+    	.close{
+			display:block;
+			height:2.6rem;
+			width:2.6rem;
+			position:absolute;
+			top:0;
+			right:1.5rem;
+			border:1px solid darken(#a54d93, 5%);
+			@include border-radius(4px);
+			background:lighten(#a54d93, 5%);
+			text-decoration:none;
+			color:#fff;
+			@include transition(top 0.2s);
+
+			i{
+				line-height:2.6rem;
+				display:block;
+				text-align:center;
+				font-size:1.5rem;
+			}
+		}
+
+    	.inner{
+    		padding:0 1.5rem;
+    		height:inherit;
+			overflow:auto;
+			
+			h1{
+				font-size:1.5rem;
+				padding-bottom:0.5rem;
+				padding-right:3.5rem;
+				padding-top:1.4rem;
+			}
+			.address{
+				font-size: 1.2rem;
+				font-weight:400;
+				color:#8D8D8D;
+				padding-bottom:0.7em;
+				border-bottom:1px solid #a54d93;
+				margin-bottom:0.8em;
+				
+				address{
+					font-style:normal;
+					display:inline;
+				}
+				.distance{
+
+				}
+			}
+    		ul.infos{
+    			list-style-type:none;
+    			font-size:1.4rem;
+    			padding-bottom:1.4rem;
+
+    			li{
+    				display:block;
+    				line-height:2rem;
+
+    				span{
+    					display:block;
+    					height:1.8rem;
+    					width:1.8rem;
+    					float:left;
+    					margin-right:0.5rem;
+    					background:red;
+    					@include border-radius(50%);
+    					text-align:center;
+    					line-height:1.8rem;
+    					font-size:1.2rem;
+    					font-weight:500;
+
+    					&#bikes_count{background:#C2DA16;color:#fff;}
+						&#stands_count{background:#FA3E3E;color:#fff;}
+						&#problems_count{background:#EEEEEE;}
+    				}
+    			}
+    		}
+    	}
+
+    	&.open{
+    		bottom:0rem;
+
+    		a.close{
+    			top:-1.4rem;
+    		}
+    	}
+    }
+}
