@@ -7,7 +7,7 @@
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <meta name="viewport" content="width=device-width, user-scalable=no">
-    
+
     <link rel="stylesheet" type="text/css" href="css/app.css">
     <link href="https://opensource.keycdn.com/fontawesome/4.6.3/font-awesome.min.css" rel="stylesheet">
     <link rel="stylesheet" href="js/leaflet/leaflet.css" />
@@ -27,11 +27,14 @@
         </h1>
         <div class="actions">
             <div class="buttons">
-                <a href="#" id="map_zoom_center" class="button hidden"><i class="fa fa-map-marker" aria-hidden="true"></i></a>
+                <a href="#" id="map_zoom_moins" class="button first" title="Zoom -"><i class="fa fa-search-minus" aria-hidden="true"></i></a>
+                <a href="#" id="map_zoom_plus" class="button last" title="Zoom +"><i class="fa fa-search-plus" aria-hidden="true"></i></a>
             </div>
             <div class="buttons">
-                <a href="#" id="map_zoom_moins" class="button first"><i class="fa fa-search-minus" aria-hidden="true"></i></a>
-                <a href="#" id="map_zoom_plus" class="button last"><i class="fa fa-search-plus" aria-hidden="true"></i></a>
+                <a href="#" id="map_zoom_center" class="button hidden" title="Centrer sur ma position"><i class="fa fa-map-marker" aria-hidden="true"></i></a>
+            </div>
+            <div class="buttons">
+                <a href="#" id="map_zoom_way" class="button hidden" title="Cadrer sur l'itinéraire"><i class="fa fa-location-arrow" aria-hidden="true"></i></a>
             </div>
         </div>
     </header><!-- /header -->

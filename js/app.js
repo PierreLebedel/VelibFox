@@ -9,8 +9,9 @@
     var userPosition = false;
     var userMarker = false;
 
-    var userLine = false;
-    var routing;
+    var userLine = false; // line with last moves of user
+    var routing; // open station way to go
+    var stationPosition; // open station coords
 
     var LOADING_USER = true;
     var LOADING_STATIONS = true;
@@ -65,7 +66,7 @@
                     dataObj.problems = dataObj.total-(dataObj.bikes+dataObj.stands);
                     dataObj.icon = "http://api.velib.pierros.fr/image.php?v="+dataObj.bikes+"&p="+dataObj.stands+"&n="+dataObj.problems;
 
-                    var stationPosition = L.latLng(dataObj.lat, dataObj.lng);
+                    var stationPos = L.latLng(dataObj.lat, dataObj.lng);
                    
                     var stationIcon = L.icon({
                         iconUrl: dataObj.icon,
@@ -73,7 +74,7 @@
                         iconAnchor: [18, 18]
                     });
                     
-                    var stationMarker = L.marker(stationPosition, {
+                    var stationMarker = L.marker(stationPos, {
                         icon : stationIcon
                     });
 
@@ -89,18 +90,10 @@
                     loading('Chargement des stations<br />'+(index+1)+'/'+data.length);
 
                     if((index+1)==data.length){
-
                         map.addLayer(markers);
-
                         LOADING_STATIONS = false;
-                        loading('Recherche de votre position');
-                        window.navigator.geolocation.getCurrentPosition(geolocSuccess, geolocError, {
-                            enableHighAccuracy: true,
-                            maximumAge: 0,
-                            timeout:10000
-                        });
 
-                        var locationWatcher = navigator.geolocation.watchPosition(updateUserPosition);
+                        geolocUser();
                     }
 
                 }, index*1);
@@ -109,6 +102,17 @@
 
         }
     });
+
+    var geolocUser = function(){
+        loading('Recherche de votre position');
+        window.navigator.geolocation.getCurrentPosition(geolocSuccess, geolocError, {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout:15000
+        });
+
+        var locationWatcher = navigator.geolocation.watchPosition(updateUserPosition);
+    }
 
     var geolocSuccess = function(p){
         userPosition = L.latLng(p.coords.latitude, p.coords.longitude);
@@ -196,14 +200,28 @@
         
         $station.scrollTop();
 
-        var stationPosition = L.latLng(data.lat, data.lng);
+        stationPosition = L.latLng(data.lat, data.lng);
 
         //var zoom = (map.getZoom()<OPENZOOM) ? OPENZOOM : map.getZoom();
         //map.setView(stationPosition, zoom);
 
         if(userPosition){
-             if(routing) map.removeControl(routing);
+            createWay();
+
+        }else{
+            var zoom = (map.getZoom()<OPENZOOM) ? OPENZOOM : map.getZoom();
+            map.setView(stationPosition, zoom);
+        }  
+
+        $station.addClass('open');
+    }
+
+    var createWay = function(){
+        if(userPosition && stationPosition){
+            if(routing) map.removeControl(routing);
             routing = false;
+
+            zoomOnWay();
 
             routing = L.Routing.control({
                 waypoints:  [
@@ -231,14 +249,19 @@
             routing.on('routesfound', function(e){
                 var routes = e.routes;
                 var route = routes[0];
-                console.log(route);
+                //console.log(route);
 
                 var m = Math.round(route.summary.totalDistance*1000);
                 var mn = Math.ceil(route.summary.totalTime/60);
 
                 $('#station .address .distance').html('('+m+' mètres, '+mn+' minutes)');
+                $('#map_zoom_way').show();
             });
+        }
+    }
 
+    var zoomOnWay = function(){
+        if(userPosition && stationPosition){
             map.fitBounds([
                 userMarker.getLatLng(),
                 stationPosition
@@ -246,20 +269,17 @@
                 paddingTopLeft:[5, 5],
                 paddingBottomRight:[5,110]
             });
-        }else{
-            var zoom = (map.getZoom()<OPENZOOM) ? OPENZOOM : map.getZoom();
-            map.setView(stationPosition, zoom);
-        }  
-
-        $station.addClass('open');
+        }
     }
 
     function closeStation(){
         if(routing) map.removeControl(routing);
         routing = false;
         $('#station .address .distance').html('');
+        $('#map_zoom_way').hide();
         var $station = $('#station');
         $station.removeClass('open');
+        stationPosition = false;
     }
 
     $('#station .close').click(function(e){
@@ -267,7 +287,7 @@
         closeStation();
     });
 
-    $(document).click(function(event) { 
+    /*$(document).click(function(event) { 
         if(
             !$(event.target).closest('#station').length && 
             !$(event.target).closest('.leaflet-marker-icon').length && 
@@ -275,7 +295,7 @@
         ){
             closeStation();
         }
-    });
+    });*/
 
     $('#map_zoom_moins').click(function(e){
         e.preventDefault();
@@ -292,7 +312,10 @@
         zoomOnUser();
     });
 
-    
+    $('#map_zoom_way').click(function(e){
+        e.preventDefault();
+        zoomOnWay();
+    });
     
 
 }));
