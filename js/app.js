@@ -25,7 +25,7 @@
 
     map = L.map('mapdiv', {
         zoomControl : false
-    }).setView([48.8534100, 2.3488000], 14);
+    }).setView([48.8534100, 2.3488000], 15);
 
     L.control.scale({imperial: false}).addTo(map);
 
@@ -86,7 +86,7 @@
 
                     //console.log(index+' / '+data.length);
 
-                    loading('Chargement des stations '+(index+1)+'/'+data.length);
+                    loading('Chargement des stations<br />'+(index+1)+'/'+data.length);
 
                     if((index+1)==data.length){
 
@@ -96,7 +96,8 @@
                         loading('Recherche de votre position');
                         window.navigator.geolocation.getCurrentPosition(geolocSuccess, geolocError, {
                             enableHighAccuracy: true,
-                            maximumAge: 0
+                            maximumAge: 0,
+                            timeout:10000
                         });
 
                         var locationWatcher = navigator.geolocation.watchPosition(updateUserPosition);
@@ -130,8 +131,6 @@
         loading();
 
         $('#map_zoom_center').removeClass('hidden');
-
-        updateUserPosition(p);
     }
 
     var geolocError = function(err){
@@ -144,10 +143,10 @@
 
     var updateUserPosition = function(p){
         if(userMarker){
-            var newUserPos = L.latLng(p.coords.latitude, p.coords.longitude);
+            userPosition = L.latLng(p.coords.latitude, p.coords.longitude);
 
             if(!userLine){
-                userLine = new L.polyline([newUserPos], {
+                userLine = new L.polyline([userPosition], {
                     color: '#a54d93',
                     weight: 2,
                     opacity: 0.5,
@@ -159,17 +158,15 @@
                 if(currentCoords.length>40){
                     currentCoords.shift(); // remove first index
                 }
-                currentCoords.push(newUserPos);
+                currentCoords.push(userPosition);
                 userLine.setLatLngs(currentCoords);
             }
 
             if(routing){
-                routing.spliceWaypoints(0, 1, newUserPos);
-
-
+                routing.spliceWaypoints(0, 1, userPosition);
             }
 
-            userMarker.setLatLng(newUserPos);
+            userMarker.setLatLng(userPosition);
         }
     }
 
@@ -204,50 +201,55 @@
         //var zoom = (map.getZoom()<OPENZOOM) ? OPENZOOM : map.getZoom();
         //map.setView(stationPosition, zoom);
 
-        if(routing) map.removeControl(routing);
-        routing = false;
+        if(userPosition){
+             if(routing) map.removeControl(routing);
+            routing = false;
 
-        routing = L.Routing.control({
-            waypoints:  [
+            routing = L.Routing.control({
+                waypoints:  [
+                    userMarker.getLatLng(),
+                    stationPosition
+                ],
+                router: L.Routing.mapzen('valhalla-GzwpXJy', {costing:'pedestrian'}),
+                formatter: new L.Routing.mapzenFormatter(),
+                createMarker: function() { return null; },
+                routeLine: function(route) {
+                    var line = L.Routing.line(route, {
+                        styles : [{color:'#FA3E3E', opacity: 1, weight: 2}],
+                        addWaypoints: false,
+                        extendToWaypoints: false,
+                        routeWhileDragging: false,
+                        autoRoute: true,
+                        useZoomParameter: false,
+                        draggableWaypoints: false                 
+                    });
+                    return line;
+                },
+                show:false
+            }).addTo(map);
+
+            routing.on('routesfound', function(e){
+                var routes = e.routes;
+                var route = routes[0];
+                console.log(route);
+
+                var m = Math.round(route.summary.totalDistance*1000);
+                var mn = Math.ceil(route.summary.totalTime/60);
+
+                $('#station .address .distance').html('('+m+' mètres, '+mn+' minutes)');
+            });
+
+            map.fitBounds([
                 userMarker.getLatLng(),
                 stationPosition
-            ],
-            router: L.Routing.mapzen('valhalla-GzwpXJy', {costing:'pedestrian'}),
-            formatter: new L.Routing.mapzenFormatter(),
-            createMarker: function() { return null; },
-            routeLine: function(route) {
-                var line = L.Routing.line(route, {
-                    styles : [{color:'#FA3E3E', opacity: 1, weight: 2}],
-                    addWaypoints: false,
-                    extendToWaypoints: false,
-                    routeWhileDragging: false,
-                    autoRoute: true,
-                    useZoomParameter: false,
-                    draggableWaypoints: false                 
-                });
-                return line;
-            },
-            show:false
-        }).addTo(map);
-
-        routing.on('routesfound', function(e){
-            var routes = e.routes;
-            var route = routes[0];
-            console.log(route);
-
-            var m = Math.round(route.summary.totalDistance*1000);
-            var mn = Math.ceil(route.summary.totalTime/60);
-
-            $('#station .address .distance').html('('+m+' mètres, '+mn+' minutes)');
-        });
-
-        map.fitBounds([
-            userMarker.getLatLng(),
-            stationPosition
-        ], {
-            paddingTopLeft:[5, 5],
-            paddingBottomRight:[5,110]
-        });
+            ], {
+                paddingTopLeft:[5, 5],
+                paddingBottomRight:[5,110]
+            });
+        }else{
+            var zoom = (map.getZoom()<OPENZOOM) ? OPENZOOM : map.getZoom();
+            map.setView(stationPosition, zoom);
+        }  
 
         $station.addClass('open');
     }
